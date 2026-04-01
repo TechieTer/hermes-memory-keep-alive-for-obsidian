@@ -1,4 +1,4 @@
-# Hermes Memory + Keep-Alive
+# Hermes Memory Keep-Alive for Obsidian
 
 Automatic task memory and a keep-alive loop for Hermes agents.
 
@@ -42,8 +42,8 @@ When you `/loop-stop`, the monitoring jobs immediately stop. The task memory kee
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive.git
-cd hermes-memory-keep-alive
+git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive-for-obsidian.git
+cd hermes-memory-keep-alive-for-obsidian
 ./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
 

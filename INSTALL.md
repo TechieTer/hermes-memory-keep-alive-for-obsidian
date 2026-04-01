@@ -9,8 +9,8 @@
 ## One-line install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive.git
-cd hermes-memory-keep-alive
+git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive-for-obsidian.git
+cd hermes-memory-keep-alive-for-obsidian
 ./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
 

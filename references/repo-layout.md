@@ -1,7 +1,7 @@
 # Repo Layout
 
 ```
-hermes-memory-keep-alive/
+hermes-memory-keep-alive-for-obsidian/
 ├── README.md
 ├── INSTALL.md
 ├── LICENSE
