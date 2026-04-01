@@ -1,83 +1,140 @@
 ---
-name: restart-safe-loop-workflow
+name: hermes-memory-keep-alive
 description: |
-  A live control loop for Hermes agents. Arm it before a task, disarm when done.
-  Watchdog, replayer, and escalator layers keep a running task alive through
-  stalls, restarts, and context loss. This is not the Obsidian task-resume
-  workflow — that is a separate skill for task memory and restart-friendly notes.
+  Automatic task memory and keep-alive loop for Hermes agents.
+  Every task gets durable RESUME / CHECKLIST / DOCS notes in Obsidian.
+  For long tasks, arm the keep-alive loop to detect stalls and keep
+  work moving — then disarm when done so you're not burning tokens.
 metadata:
   author: terry
-  version: "0.2.0"
+  version: "1.0.0"
   hermes:
-    tags: [workflow, recovery, restart-safe, loop, live-control]
-    related_skills: [obsidian-task-resume-workflow]
+    tags: [workflow, memory, recovery, restart-safe, obsidian, loop, keep-alive]
+    related_skills: []
 ---
 
-# Restart-Safe Loop Workflow
+# Hermes Memory + Keep-Alive
 
-This is not the normal Obsidian RESUME / CHECKLIST / DOCS workflow.
-That workflow is for task memory and restart-friendly notes.
-This loop is for live control: arm it, disarm it, and let Hermes keep
-watch over a running project with watchdog, replayer, and escalator layers.
+Two things in one skill:
 
-This skill is fully self-contained. If no task notes exist when the loop
-is armed, the watchdog automatically creates them by looking at what the
-agent is currently working on. If you also use `obsidian-task-resume-workflow`,
-the loop works alongside it — but it does not require it.
+1. **Task Memory** — every task automatically gets persistent notes so work survives restarts
+2. **Keep-Alive Loop** — arm it for long tasks, disarm when done
 
-## Loop controls
+## Task Memory
 
-- **`/loop-start`** — arms the loop. Sets LOOP-STATE.md to `armed` and the monitoring jobs begin running.
-- **`/loop-stop`** — disarms the loop. Sets LOOP-STATE.md to `disarmed` and the monitoring jobs no-op. No wasted tokens.
+When you receive any task, automatically create a task folder in the Obsidian vault:
 
-## When to use
+```
+<vault>/Tasks/<task-name>/
+  RESUME.md      — status, heartbeat, next action, key files, restart note
+  CHECKLIST.md   — step-by-step progress
+  DOCS.md        — goal, decisions, gotchas, notes for next session
+```
 
-1. `/loop-start` before giving your agent a task
-2. Walk away — the loop keeps the task alive
-3. `/loop-stop` when the task is done
+### RESUME.md must contain:
+- Task name and one-line description
+- Current status (active / stalled / complete)
+- Last heartbeat (date and time, updated whenever you touch the task)
+- Next action (one concrete step)
+- Key files (relevant paths)
+- Restart note (what a fresh session needs to pick this up)
 
-## What it does
+### CHECKLIST.md must contain:
+- Numbered or checkbox steps
+- Current status of each step
+- A final verification step
 
-When armed, three automated layers monitor your agent's work:
+### DOCS.md must contain:
+- Goal
+- Important decisions and why
+- File paths that matter
+- Gotchas and failure modes
+- Notes for the next session
+
+### Update rules:
+- Create notes before starting a multi-step task.
+- Update RESUME.md before and after major milestones.
+- Mark checklist items complete as soon as they are done.
+- Add discoveries and gotchas to DOCS.md immediately.
+- Always update the heartbeat when touching an active task.
+- A heartbeat older than 24 hours or a missing next action means the task is stale.
+
+### Vault path:
+Use `OBSIDIAN_VAULT_PATH` if set, otherwise default to `~/Documents/Obsidian Vault`.
+Always quote vault paths (they may contain spaces).
+
+## Keep-Alive Loop
+
+For long-running tasks, the keep-alive loop prevents silent failures.
+
+### Controls
+
+- **`/loop-start`** — arms the loop. Monitoring jobs begin running.
+- **`/loop-stop`** — disarms the loop. Jobs no-op. No wasted tokens.
+
+The loop state lives in `Tasks/Session-Resume-Workflow/LOOP-STATE.md`.
+
+### Monitoring layers
+
+When armed, three jobs watch your agent's work:
 
 | Layer | Job name | Schedule | What it does |
 |-------|----------|----------|--------------|
-| Watchdog | `restart-safe-loop-watchdog` | 15m | Detects stalls and writes a recovery note |
-| Replayer | `restart-safe-loop-replayer` | 30m | Takes one concrete step on a stalled task |
-| Escalator | `restart-safe-loop-escalator` | 60m | Forces a fresh-session handoff on repeated stalls |
+| Watchdog | `keep-alive-watchdog` | 15m | Detects stalls, writes WATCHDOG.md |
+| Replayer | `keep-alive-replayer` | 30m | Takes one concrete step on a stalled task |
+| Escalator | `keep-alive-escalator` | 60m | Forces fresh-session handoff on repeated stalls |
 
-If the agent has no task notes yet, the watchdog bootstraps them automatically —
-it looks at what the agent is working on and creates a RESUME.md, CHECKLIST.md,
-and DOCS.md so the loop has something to monitor.
+### Integrity layers
 
-Once task notes exist, the watchdog writes a WATCHDOG.md when it detects a stall.
-The replayer picks it up and advances one step. If the same stall keeps repeating,
-the escalator forces a clean restart.
+These run always, regardless of loop state:
 
-When disarmed, all three jobs skip immediately with a one-line no-op.
+| Layer | Job name | Schedule | What it does |
+|-------|----------|----------|--------------|
+| Validator | `memory-validator` | 60m | Repairs missing notes, refreshes workflow index |
+| Smoke test | `memory-smoke-test` | 360m | Verifies the skill itself is healthy |
 
-## Canonical naming
+### Watchdog rules:
+- Write WATCHDOG.md only when you can prove a stall. Do not manufacture problems.
+- Include: folder path, blocker, why-stalled tag, one next action.
+- Why-stalled tags: `blocked-on-external`, `ambiguous-next-step`, `repeated-promise`, `missing-context`
 
-Use these names consistently:
-- `restart-safe-loop-watchdog`
-- `restart-safe-loop-replayer`
-- `restart-safe-loop-escalator`
+### Replayer rules:
+- Take only one mechanical step per pass. No speculative fixes.
+- If the step is ambiguous, update WATCHDOG.md with a clearer next action and stop.
+
+### Escalator rules:
+- Escalate only after the same stall repeats or a replayer pass fails to advance.
+- Add an ESCALATE section to WATCHDOG.md with what was tried and the strongest next action.
+
+### Validator rules:
+- Inspect task folders for missing RESUME.md, CHECKLIST.md, or DOCS.md.
+- Backfill missing notes from the canonical template. Do not invent formats.
+- Refresh the workflow index so it lists all tasks with status and next action.
+- Treat a task as stale if heartbeat > 24h or next action is missing.
+
+### Smoke test checks:
+- Core workflow notes exist (TEMPLATE.md, WORKFLOW-INDEX.md, LOOP-STATE.md)
+- All 5 scheduled jobs exist and are enabled
+- At least one active task has a heartbeat and next action
+- Loop state is valid (armed or disarmed)
 
 ## File layout
-
-The loop state lives in your Obsidian vault (or any directory you point it at):
 
 ```
 <vault>/Tasks/
   Session-Resume-Workflow/
+    TEMPLATE.md          # canonical template for new task folders
+    WORKFLOW-INDEX.md    # quick-scan index of all tasks
     LOOP-STATE.md        # armed/disarmed state marker
   <task-name>/
+    RESUME.md
+    CHECKLIST.md
+    DOCS.md
     WATCHDOG.md          # created by watchdog when stall detected
 ```
 
-## Rules
+## When to use
 
-- The watchdog writes WATCHDOG.md only when it can prove a stall. It does not manufacture problems.
-- The replayer takes only one mechanical step per pass. No speculative fixes.
-- The escalator acts only after repeated stalls or failed replayer passes.
-- When the loop is disarmed, all monitoring jobs no-op immediately.
+- **Task memory**: Always. Every task should get notes automatically.
+- **Keep-alive loop**: For long tasks. `/loop-start` before the task, `/loop-stop` when done.
+- **Quick tasks**: Just let the task memory handle it. No need to arm the loop.

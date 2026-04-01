@@ -1,19 +1,35 @@
-# Hermes Restart-Safe Loop Workflow
+# Hermes Memory + Keep-Alive
 
-Give your Hermes agent a task, arm the loop, and walk away. It'll keep working until it's done ��� even through stalls, restarts, and context loss. When it's finished, disarm the loop so you're not burning tokens while idle.
+Automatic task memory and a keep-alive loop for Hermes agents.
+
+**Task memory** — every task your agent works on automatically gets persistent RESUME, CHECKLIST, and DOCS notes in Obsidian. Work survives restarts, context loss, and session changes.
+
+**Keep-alive loop** — for long tasks, arm the loop and walk away. If your agent stalls, the loop detects it and keeps work moving. Disarm when done so you're not burning tokens.
 
 ```
-/loop-start   ← arm before giving your agent a task
-/loop-stop    ← disarm when the task is done
+/loop-start   ← arm before a long task
+/loop-stop    ← disarm when done
 ```
 
 ## The problem
 
-Long-running agent tasks fail silently. The agent stalls, loses context, or restarts — and nobody notices. You come back hours later to find nothing happened.
+1. Agent tasks lose state when sessions end or context compacts. You restart and everything is gone.
+2. Long tasks fail silently. The agent stalls and nobody notices.
 
 ## How it works
 
-When the loop is armed, three automated layers monitor your agent's work:
+### Task memory (always on)
+
+Every time your agent gets a task, it creates a folder in your Obsidian vault with three notes:
+- **RESUME.md** — what the task is, current status, next action, how to restart
+- **CHECKLIST.md** — step-by-step progress
+- **DOCS.md** — decisions, gotchas, notes for the next session
+
+A **validator** runs every 60m to repair missing notes and keep a workflow index current. A **smoke test** runs every 360m to make sure the system itself is healthy.
+
+### Keep-alive loop (arm when needed)
+
+When you `/loop-start`, three monitoring layers activate:
 
 | Layer | Schedule | What it does |
 |-------|----------|--------------|
@@ -21,51 +37,55 @@ When the loop is armed, three automated layers monitor your agent's work:
 | **Replayer** | 30m | Picks up a stalled task and takes one concrete step forward |
 | **Escalator** | 60m | Forces a fresh-session restart if the same stall keeps repeating |
 
-When you `/loop-stop`, all three jobs immediately stop running. No wasted tokens.
-
-## Fully self-contained
-
-You don't need any other skills installed. If the agent has no task notes when the loop is armed, the watchdog automatically creates them — it looks at what the agent is working on and bootstraps a RESUME.md, CHECKLIST.md, and DOCS.md so the loop has something to monitor.
-
-This is not the Obsidian task-resume workflow (that's a separate skill for task memory). This loop is for **live control**: arm it, disarm it, and let Hermes keep watch over a running task. It works alongside other skills if you have them, but it doesn't require them.
+When you `/loop-stop`, the monitoring jobs immediately stop. The task memory keeps running either way.
 
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/hermes-restart-safe-loop-workflow.git
-cd hermes-restart-safe-loop-workflow
+git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive.git
+cd hermes-memory-keep-alive
 ./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
 
-The script installs the skill, sets up your vault with the loop state marker, and adds the 3 monitoring jobs to Hermes. The loop starts disarmed.
+The script installs the skill, sets up your vault with the template and workflow index, and adds all 5 cron jobs to Hermes.
 
 See [INSTALL.md](INSTALL.md) for manual install, options, and uninstall.
 
 ## Usage
 
-1. **`/loop-start`** — arm the loop
-2. **Give your agent a task** — the watchdog auto-creates task notes if needed
-3. **Walk away** — the loop keeps the task alive through stalls and restarts
-4. **`/loop-stop`** when done — stops burning tokens
+**Every task** (automatic — no action needed):
+- Give your agent a task → it creates RESUME/CHECKLIST/DOCS automatically
+- The validator keeps notes healthy in the background
+
+**Long tasks** (arm the loop):
+1. `/loop-start`
+2. Give your agent the task
+3. Walk away — the loop keeps it alive
+4. `/loop-stop` when done
 
 ## Repo layout
 
 ```
-install.sh              # One-step installer
-SKILL.md                # Hermes skill definition
+install.sh                # One-step installer
+SKILL.md                  # Hermes skill definition
 prompts/
-  watchdog-prompt.md    # Stall detection
-  replayer-prompt.md    # One-step recovery
-  escalator-prompt.md   # Repeated-stall handoff
+  watchdog-prompt.md      # Stall detection (keep-alive)
+  replayer-prompt.md      # One-step recovery (keep-alive)
+  escalator-prompt.md     # Repeated-stall handoff (keep-alive)
+  validator-prompt.md     # Note integrity (memory)
+  smoke-test-prompt.md    # System health check (memory)
 templates/
-  LOOP-STATE.md         # Armed/disarmed state marker
+  TEMPLATE.md             # Canonical task note template
+  LOOP-STATE.md           # Armed/disarmed state marker
+examples/
+  WORKFLOW-INDEX.md       # Starter workflow index
 references/
-  repo-layout.md        # Repo layout reference
+  repo-layout.md          # Repo layout reference
 ```
 
 ## Who it is for
 
-Anyone running Hermes who gives their agent long tasks and doesn't want to babysit them.
+Anyone running Hermes who wants their agent to remember what it's working on and finish long tasks without babysitting.
 
 ## License
 

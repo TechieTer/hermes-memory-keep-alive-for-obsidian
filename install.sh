@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Hermes Restart-Safe Loop Workflow — Installer
-# Copies the skill and adds the 3 monitoring jobs to your Hermes setup.
+# Hermes Memory + Keep-Alive — Installer
+# Installs the skill, sets up Obsidian vault, and adds 5 cron jobs.
 
 HERMES_DIR="${HERMES_DIR:-$HOME/.hermes}"
 VAULT_PATH=""
@@ -51,7 +51,7 @@ if [[ ! -d "$HERMES_DIR/cron" ]]; then
 fi
 
 # --- 1. Install the skill ---
-SKILL_DIR="$HERMES_DIR/skills/$SKILL_CATEGORY/restart-safe-loop-workflow"
+SKILL_DIR="$HERMES_DIR/skills/$SKILL_CATEGORY/hermes-memory-keep-alive"
 mkdir -p "$SKILL_DIR/references"
 cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
 if [[ -f "$SCRIPT_DIR/references/repo-layout.md" ]]; then
@@ -59,40 +59,53 @@ if [[ -f "$SCRIPT_DIR/references/repo-layout.md" ]]; then
 fi
 echo "Installed skill to $SKILL_DIR/"
 
-# --- 2. Set up loop state ---
+# --- 2. Set up Obsidian vault structure ---
 TASKS_DIR="$VAULT_PATH/Tasks/Session-Resume-Workflow"
 mkdir -p "$TASKS_DIR"
 
-if [[ ! -f "$TASKS_DIR/LOOP-STATE.md" ]]; then
-  cp "$SCRIPT_DIR/templates/LOOP-STATE.md" "$TASKS_DIR/LOOP-STATE.md"
-  echo "Copied LOOP-STATE.md to $TASKS_DIR/"
+for file in LOOP-STATE.md TEMPLATE.md; do
+  if [[ ! -f "$TASKS_DIR/$file" ]]; then
+    cp "$SCRIPT_DIR/templates/$file" "$TASKS_DIR/$file"
+    echo "Copied $file to $TASKS_DIR/"
+  else
+    echo "$file already exists, skipping."
+  fi
+done
+
+if [[ ! -f "$TASKS_DIR/WORKFLOW-INDEX.md" ]]; then
+  cp "$SCRIPT_DIR/examples/WORKFLOW-INDEX.md" "$TASKS_DIR/WORKFLOW-INDEX.md"
+  echo "Copied WORKFLOW-INDEX.md to $TASKS_DIR/"
 else
-  echo "LOOP-STATE.md already exists, skipping."
+  echo "WORKFLOW-INDEX.md already exists, skipping."
 fi
 
 # --- 3. Build and merge cron jobs ---
 JOBS_FILE="$HERMES_DIR/cron/jobs.json"
 
-# Generate the 3 job entries with the user's vault path baked in
 WATCHDOG_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/watchdog-prompt.md")"
 REPLAYER_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/replayer-prompt.md")"
 ESCALATOR_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/escalator-prompt.md")"
+VALIDATOR_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/validator-prompt.md")"
+SMOKETEST_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/smoke-test-prompt.md")"
 
 NOW="$(date -u +"%Y-%m-%dT%H:%M:%S.000000+00:00")"
 
 python3 - "$JOBS_FILE" "$NOW" \
-  "$WATCHDOG_PROMPT" "$REPLAYER_PROMPT" "$ESCALATOR_PROMPT" <<'PYEOF'
+  "$WATCHDOG_PROMPT" "$REPLAYER_PROMPT" "$ESCALATOR_PROMPT" \
+  "$VALIDATOR_PROMPT" "$SMOKETEST_PROMPT" <<'PYEOF'
 import json, sys, secrets, os
 
 jobs_file = sys.argv[1]
 now = sys.argv[2]
 
-SKILL_NAME = "restart-safe-loop-workflow"
+SKILL_NAME = "hermes-memory-keep-alive"
 
 prompts = {
-    "restart-safe-loop-watchdog":  {"prompt": sys.argv[3], "minutes": 15},
-    "restart-safe-loop-replayer":  {"prompt": sys.argv[4], "minutes": 30},
-    "restart-safe-loop-escalator": {"prompt": sys.argv[5], "minutes": 60},
+    "keep-alive-watchdog":  {"prompt": sys.argv[3], "minutes": 15},
+    "keep-alive-replayer":  {"prompt": sys.argv[4], "minutes": 30},
+    "keep-alive-escalator": {"prompt": sys.argv[5], "minutes": 60},
+    "memory-validator":     {"prompt": sys.argv[6], "minutes": 60},
+    "memory-smoke-test":    {"prompt": sys.argv[7], "minutes": 360},
 }
 
 # Load existing jobs
@@ -153,8 +166,9 @@ PYEOF
 echo ""
 echo "Done. Installed:"
 echo "  - Skill:      $SKILL_DIR/"
-echo "  - Loop state: $TASKS_DIR/LOOP-STATE.md"
-echo "  - Cron jobs:  3 jobs added to $JOBS_FILE"
+echo "  - Vault:      $TASKS_DIR/"
+echo "  - Cron jobs:  5 jobs added to $JOBS_FILE"
 echo ""
-echo "To arm the loop: /loop-start"
-echo "To disarm:       /loop-stop"
+echo "Your agent will now automatically create task notes for every task."
+echo "For long tasks, use /loop-start to arm the keep-alive loop."
+echo "When done, /loop-stop to stop burning tokens."
