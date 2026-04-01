@@ -23,31 +23,22 @@ Five automated layers keep things moving:
 | Validator | 60m | Repairs missing notes, refreshes the workflow index |
 | Smoke test | 360m | Verifies the workflow itself is still healthy |
 
-## Quick start
+## Install
 
 ```bash
-# Clone the repo
 git clone https://github.com/YOUR_USERNAME/hermes-restart-safe-loop-workflow.git
 cd hermes-restart-safe-loop-workflow
-
-# Copy the skill into Hermes
-cp SKILL.md ~/.hermes/skills/restart-safe-loop/SKILL.md
-
-# Set up your Obsidian vault
-VAULT="$HOME/Documents/Obsidian Vault"  # <-- your vault path
-mkdir -p "$VAULT/Tasks/Session-Resume-Workflow"
-cp templates/TEMPLATE.md "$VAULT/Tasks/Session-Resume-Workflow/TEMPLATE.md"
-cp examples/WORKFLOW-INDEX.md "$VAULT/Tasks/Session-Resume-Workflow/WORKFLOW-INDEX.md"
-
-# Replace VAULT_PATH in each prompt with your actual vault path
-# Then create the 5 Hermes cron jobs (see INSTALL.md for details)
+./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
 
-See [INSTALL.md](INSTALL.md) for the full step-by-step including all five cron jobs.
+That's it. The script copies the skill, sets up your vault, and adds all 5 cron jobs to Hermes automatically.
+
+See [INSTALL.md](INSTALL.md) for manual install, options, and uninstall.
 
 ## Repo layout
 
 ```
+install.sh            # One-step installer
 SKILL.md              # Hermes skill definition
 prompts/
   watchdog-prompt.md  # Stall detection

@@ -15,11 +15,11 @@ Run these checks in order:
 2. **Template is valid**: TEMPLATE.md defines the RESUME.md, CHECKLIST.md, and DOCS.md sections.
 3. **Workflow index is current**: WORKFLOW-INDEX.md was updated within the last 24 hours and lists at least one active task.
 4. **Scheduled jobs are running**: The following Hermes cron jobs exist and are enabled:
+   - `workflow-watchdog`
+   - `workflow-replayer`
+   - `workflow-escalator`
    - `workflow-validator`
    - `workflow-smoke-test`
-   - `ralph-loop-watchdog` (or your watchdog job name)
-   - `ralph-loop-replayer` (or your replayer job name)
-   - `ralph-loop-escalator` (or your escalator job name)
 5. **At least one active task has a heartbeat and a next action** in its RESUME.md.
 
 ## Output
