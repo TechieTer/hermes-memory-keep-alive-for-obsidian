@@ -64,10 +64,10 @@ The loop uses five automated layers, each running as a Hermes cron job:
 
 ## When to use
 
-- Any long-running task that could stall silently after a restart or context loss
-- Multi-step work where state needs to survive across sessions
-- When you want automated detection and recovery of stuck tasks
-- When publishing a Hermes-ready loop to GitHub or sharing in Discord
+- Before giving your agent a long task: `/loop-start`, assign the task, walk away
+- When the task is done: `/loop-stop` to stop burning tokens
+- Any multi-step work that could stall silently after a restart or context loss
+- When you want your agent to finish a task without babysitting
 
 ## File layout
 

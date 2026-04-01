@@ -59,6 +59,12 @@ The loop installs in a disarmed state. Hermes provides native commands to contro
 
 These are built into Hermes and work from any channel (Telegram, CLI, etc.).
 
+Typical workflow:
+1. `/loop-start` — arm the loop
+2. Give your agent a task
+3. Walk away — the loop keeps the task alive
+4. `/loop-stop` when the task is done — stops burning tokens
+
 ## Verify
 
 Ask Hermes:
