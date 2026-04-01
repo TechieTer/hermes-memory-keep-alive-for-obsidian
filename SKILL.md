@@ -1,96 +1,75 @@
 ---
 name: restart-safe-loop-workflow
 description: |
-  Package and maintain a separate Hermes keep-live loop workflow.
-  Use when you want native /loop-start and /loop-stop controls, watchdog/replayer/escalator layers,
-  validator and smoke-test jobs, and a restart-safe loop that is distinct from the normal
-  Obsidian RESUME/CHECKLIST/DOCS task-resume workflow.
+  A live control loop for Hermes agents. Arm it before a task, disarm when done.
+  Watchdog, replayer, and escalator layers keep a running task alive through
+  stalls, restarts, and context loss. This is not the Obsidian task-resume
+  workflow — that is a separate skill for task memory and restart-friendly notes.
 metadata:
   author: terry
   version: "0.2.0"
   hermes:
-    tags: [workflow, recovery, obsidian, restart-safe, task-management, loop]
+    tags: [workflow, recovery, restart-safe, loop, live-control]
     related_skills: [obsidian-task-resume-workflow]
 ---
 
 # Restart-Safe Loop Workflow
 
-Use this skill when packaging or operating the keep-live loop itself.
-It is separate from the normal Obsidian task-resume workflow.
+This is not the normal Obsidian RESUME / CHECKLIST / DOCS workflow.
+That workflow is for task memory and restart-friendly notes.
+This loop is for live control: arm it, disarm it, and let Hermes keep
+watch over a running project with watchdog, replayer, and escalator layers.
 
-## Not the resume workflow
-
-Do not use this skill as a replacement for `obsidian-task-resume-workflow`.
-That skill owns the usual RESUME.md, CHECKLIST.md, and DOCS.md task notes.
-This skill owns the live loop: arming, disarming, watchdogs, replayers,
-escalation, and the validator/smoke-test guard rails.
+If you also use the `obsidian-task-resume-workflow` skill, the loop works
+alongside it — but it does not require it. This skill stands on its own.
 
 ## Loop controls
 
-- `/loop-start` — arms the loop. Sets LOOP-STATE.md to `armed` and enables the watchdog/replayer/escalator jobs.
-- `/loop-stop` — disarms the loop. Sets LOOP-STATE.md to `disarmed` and the monitoring jobs pause or no-op.
-
-The loop state lives in `Tasks/Session-Resume-Workflow/LOOP-STATE.md`.
-
-## Canonical naming
-
-Use the restart-safe loop names consistently:
-- `restart-safe-loop-watchdog`
-- `restart-safe-loop-replayer`
-- `restart-safe-loop-escalator`
-- `workflow-validator`
-- `workflow-smoke-test`
-
-Avoid the old Ralph Loop wording in prompts, docs, and output.
-
-## What it packages
-
-- native `/loop-start` and `/loop-stop` controls
-- a loop state marker for armed/disarmed mode
-- a watchdog / replayer / escalator chain
-- validator and smoke-test layers
-- optional Obsidian-facing handoff notes when paired with the resume workflow
-- crisp loop prompts that are short, factual, and restart-safe
-
-## Recovery layers
-
-The loop uses five automated layers, each running as a Hermes cron job:
-
-1. **Watchdog** (every 15m) — detects stalled tasks and promise-without-progress patterns. Writes a WATCHDOG.md recovery note with the blocker, a why-stalled tag, and the next action.
-2. **Replayer** (every 30m) — takes exactly one concrete step on a stalled task using fresh context. If the step is ambiguous, updates the notes and stops.
-3. **Escalator** (every 60m) — handles repeated stalls by forcing a fresh-session handoff with the strongest next action.
-4. **Validator** (every 60m) — inspects task folders for missing notes, backfills from the canonical template, refreshes the workflow index.
-5. **Smoke test** (every 360m) — verifies the workflow itself is healthy: core notes exist, template exists, jobs are enabled, at least one task has a heartbeat.
+- **`/loop-start`** — arms the loop. Sets LOOP-STATE.md to `armed` and the monitoring jobs begin running.
+- **`/loop-stop`** — disarms the loop. Sets LOOP-STATE.md to `disarmed` and the monitoring jobs no-op. No wasted tokens.
 
 ## When to use
 
-- Before giving your agent a long task: `/loop-start`, assign the task, walk away
-- When the task is done: `/loop-stop` to stop burning tokens
-- Any multi-step work that could stall silently after a restart or context loss
-- When you want your agent to finish a task without babysitting
+1. `/loop-start` before giving your agent a task
+2. Walk away — the loop keeps the task alive
+3. `/loop-stop` when the task is done
+
+## What it does
+
+When armed, three automated layers monitor your agent's work:
+
+| Layer | Job name | Schedule | What it does |
+|-------|----------|----------|--------------|
+| Watchdog | `restart-safe-loop-watchdog` | 15m | Detects stalls and writes a recovery note |
+| Replayer | `restart-safe-loop-replayer` | 30m | Takes one concrete step on a stalled task |
+| Escalator | `restart-safe-loop-escalator` | 60m | Forces a fresh-session handoff on repeated stalls |
+
+The watchdog writes a WATCHDOG.md when it detects a stall. The replayer picks it up and advances one step. If the same stall keeps repeating, the escalator forces a clean restart.
+
+When disarmed, all three jobs skip immediately with a one-line no-op.
+
+## Canonical naming
+
+Use these names consistently:
+- `restart-safe-loop-watchdog`
+- `restart-safe-loop-replayer`
+- `restart-safe-loop-escalator`
 
 ## File layout
+
+The loop state lives in your Obsidian vault (or any directory you point it at):
 
 ```
 <vault>/Tasks/
   Session-Resume-Workflow/
-    TEMPLATE.md          # canonical template for new task folders
-    WORKFLOW-INDEX.md    # quick-scan index of all tasks
     LOOP-STATE.md        # armed/disarmed state marker
   <task-name>/
-    RESUME.md
-    CHECKLIST.md
-    DOCS.md
     WATCHDOG.md          # created by watchdog when stall detected
 ```
 
 ## Rules
 
-- Every active task folder must have RESUME.md, CHECKLIST.md, and DOCS.md.
-- RESUME.md must have a `Last heartbeat` and a `Next action`.
-- A heartbeat older than 24 hours or a missing next action means the task is stale.
-- The validator auto-creates missing notes from the canonical template.
 - The watchdog writes WATCHDOG.md only when it can prove a stall. It does not manufacture problems.
 - The replayer takes only one mechanical step per pass. No speculative fixes.
 - The escalator acts only after repeated stalls or failed replayer passes.
-- When the loop is disarmed, monitoring jobs should pause or no-op.
+- When the loop is disarmed, all monitoring jobs no-op immediately.

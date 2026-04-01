@@ -9,16 +9,11 @@ restart-safe-loop-workflow/
 ├── install.sh
 ├── .gitignore
 ├── templates/
-│   ├── TEMPLATE.md
 │   └── LOOP-STATE.md
 ├── prompts/
 │   ├── watchdog-prompt.md
 │   ├── replayer-prompt.md
-│   ├── escalator-prompt.md
-│   ├── validator-prompt.md
-│   └── smoke-test-prompt.md
-├── examples/
-│   └── WORKFLOW-INDEX.md
+│   └── escalator-prompt.md
 └── references/
     └── repo-layout.md
 ```

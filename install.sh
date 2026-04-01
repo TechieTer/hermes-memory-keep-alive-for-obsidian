@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Hermes Restart-Safe Loop Workflow — Installer
-# Copies the skill, templates, and cron jobs into your Hermes setup.
+# Copies the skill and adds the 3 monitoring jobs to your Hermes setup.
 
 HERMES_DIR="${HERMES_DIR:-$HOME/.hermes}"
 VAULT_PATH=""
@@ -59,23 +59,9 @@ if [[ -f "$SCRIPT_DIR/references/repo-layout.md" ]]; then
 fi
 echo "Installed skill to $SKILL_DIR/"
 
-# --- 2. Set up Obsidian vault structure ---
+# --- 2. Set up loop state ---
 TASKS_DIR="$VAULT_PATH/Tasks/Session-Resume-Workflow"
 mkdir -p "$TASKS_DIR"
-
-if [[ ! -f "$TASKS_DIR/TEMPLATE.md" ]]; then
-  cp "$SCRIPT_DIR/templates/TEMPLATE.md" "$TASKS_DIR/TEMPLATE.md"
-  echo "Copied TEMPLATE.md to $TASKS_DIR/"
-else
-  echo "TEMPLATE.md already exists, skipping."
-fi
-
-if [[ ! -f "$TASKS_DIR/WORKFLOW-INDEX.md" ]]; then
-  cp "$SCRIPT_DIR/examples/WORKFLOW-INDEX.md" "$TASKS_DIR/WORKFLOW-INDEX.md"
-  echo "Copied WORKFLOW-INDEX.md to $TASKS_DIR/"
-else
-  echo "WORKFLOW-INDEX.md already exists, skipping."
-fi
 
 if [[ ! -f "$TASKS_DIR/LOOP-STATE.md" ]]; then
   cp "$SCRIPT_DIR/templates/LOOP-STATE.md" "$TASKS_DIR/LOOP-STATE.md"
@@ -87,18 +73,15 @@ fi
 # --- 3. Build and merge cron jobs ---
 JOBS_FILE="$HERMES_DIR/cron/jobs.json"
 
-# Generate the 5 job entries with the user's vault path baked in
+# Generate the 3 job entries with the user's vault path baked in
 WATCHDOG_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/watchdog-prompt.md")"
 REPLAYER_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/replayer-prompt.md")"
 ESCALATOR_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/escalator-prompt.md")"
-VALIDATOR_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/validator-prompt.md")"
-SMOKETEST_PROMPT="$(sed "s|VAULT_PATH|$VAULT_PATH|g" "$SCRIPT_DIR/prompts/smoke-test-prompt.md")"
 
 NOW="$(date -u +"%Y-%m-%dT%H:%M:%S.000000+00:00")"
 
 python3 - "$JOBS_FILE" "$NOW" \
-  "$WATCHDOG_PROMPT" "$REPLAYER_PROMPT" "$ESCALATOR_PROMPT" \
-  "$VALIDATOR_PROMPT" "$SMOKETEST_PROMPT" <<'PYEOF'
+  "$WATCHDOG_PROMPT" "$REPLAYER_PROMPT" "$ESCALATOR_PROMPT" <<'PYEOF'
 import json, sys, secrets, os
 
 jobs_file = sys.argv[1]
@@ -110,8 +93,6 @@ prompts = {
     "restart-safe-loop-watchdog":  {"prompt": sys.argv[3], "minutes": 15},
     "restart-safe-loop-replayer":  {"prompt": sys.argv[4], "minutes": 30},
     "restart-safe-loop-escalator": {"prompt": sys.argv[5], "minutes": 60},
-    "workflow-validator":          {"prompt": sys.argv[6], "minutes": 60},
-    "workflow-smoke-test":         {"prompt": sys.argv[7], "minutes": 360},
 }
 
 # Load existing jobs
@@ -172,10 +153,8 @@ PYEOF
 echo ""
 echo "Done. Installed:"
 echo "  - Skill:      $SKILL_DIR/"
-echo "  - Template:   $TASKS_DIR/TEMPLATE.md"
-echo "  - Index:      $TASKS_DIR/WORKFLOW-INDEX.md"
 echo "  - Loop state: $TASKS_DIR/LOOP-STATE.md"
-echo "  - Cron jobs:  $JOBS_FILE"
+echo "  - Cron jobs:  3 jobs added to $JOBS_FILE"
 echo ""
-echo "To arm the loop, tell Hermes: /loop-start"
-echo "To verify, ask Hermes: \"Run the workflow smoke test now.\""
+echo "To arm the loop: /loop-start"
+echo "To disarm:       /loop-stop"
