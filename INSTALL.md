@@ -15,39 +15,56 @@ cd hermes-restart-safe-loop-workflow
 ```
 
 This does everything:
-1. Copies the skill into `~/.hermes/skills/restart-safe-loop/`
-2. Creates `Tasks/Session-Resume-Workflow/` in your vault with the template and starter index
-3. Adds all 5 cron jobs to your Hermes `jobs.json` (skips any that already exist)
+1. Installs the skill to `~/.hermes/skills/note-taking/restart-safe-loop-workflow/`
+2. Creates `Tasks/Session-Resume-Workflow/` in your vault with the template, index, and loop state marker
+3. Adds all 5 cron jobs to your Hermes `jobs.json` with the correct skill binding (skips any that already exist)
 4. Bakes your vault path into each job prompt automatically
 
-If your Hermes home is not `~/.hermes`, pass `--hermes /path/to/.hermes`.
+Options:
+- `--hermes PATH` — Hermes home directory (default: `~/.hermes`)
+- `--category NAME` — Skill category directory (default: `note-taking`)
 
 ### What gets created
 
 | What | Where |
 |------|-------|
-| Skill | `~/.hermes/skills/restart-safe-loop/SKILL.md` |
+| Skill | `~/.hermes/skills/note-taking/restart-safe-loop-workflow/SKILL.md` |
 | Template | `<vault>/Tasks/Session-Resume-Workflow/TEMPLATE.md` |
 | Workflow index | `<vault>/Tasks/Session-Resume-Workflow/WORKFLOW-INDEX.md` |
-| Watchdog job | `~/.hermes/cron/jobs.json` (every 15m) |
-| Replayer job | `~/.hermes/cron/jobs.json` (every 30m) |
-| Escalator job | `~/.hermes/cron/jobs.json` (every 60m) |
-| Validator job | `~/.hermes/cron/jobs.json` (every 60m) |
-| Smoke test job | `~/.hermes/cron/jobs.json` (every 360m) |
+| Loop state | `<vault>/Tasks/Session-Resume-Workflow/LOOP-STATE.md` |
+| Watchdog job | `restart-safe-loop-watchdog` (every 15m) |
+| Replayer job | `restart-safe-loop-replayer` (every 30m) |
+| Escalator job | `restart-safe-loop-escalator` (every 60m) |
+| Validator job | `workflow-validator` (every 60m) |
+| Smoke test job | `workflow-smoke-test` (every 360m) |
+
+All jobs are bound to the `restart-safe-loop-workflow` skill.
 
 ## Manual install
 
 If you prefer not to use the script:
 
-1. Copy `SKILL.md` into `~/.hermes/skills/restart-safe-loop/SKILL.md`.
+1. Copy `SKILL.md` and `references/` into `~/.hermes/skills/note-taking/restart-safe-loop-workflow/`.
 2. Create `Tasks/Session-Resume-Workflow/` in your Obsidian vault.
-3. Copy `templates/TEMPLATE.md` and `examples/WORKFLOW-INDEX.md` into that folder.
+3. Copy `templates/TEMPLATE.md`, `templates/LOOP-STATE.md`, and `examples/WORKFLOW-INDEX.md` into that folder.
 4. Replace `VAULT_PATH` in each file under `prompts/` with your actual vault path.
-5. Create the 5 cron jobs manually (see table above for names and schedules). Use the content of each prompt file as the job's prompt text.
+5. Create the 5 cron jobs manually (see table above for names and schedules). Use the content of each prompt file as the job's prompt text. Set the `skill` field to `restart-safe-loop-workflow`.
+
+## Arm the loop
+
+After installing, tell Hermes:
+
+> /loop-start
+
+This sets `LOOP-STATE.md` to `armed` and the monitoring jobs begin running.
+
+To pause the loop:
+
+> /loop-stop
 
 ## Verify
 
-After installing, ask Hermes:
+Ask Hermes:
 
 > Run the workflow smoke test now.
 
@@ -58,7 +75,7 @@ It should return `smoke-test: pass` if everything is set up correctly.
 Remove the skill, the cron jobs, and optionally the vault notes:
 
 ```bash
-rm -rf ~/.hermes/skills/restart-safe-loop
+rm -rf ~/.hermes/skills/note-taking/restart-safe-loop-workflow
 # Then remove the 5 jobs from ~/.hermes/cron/jobs.json manually,
 # or delete them through Hermes CLI / Telegram.
 ```

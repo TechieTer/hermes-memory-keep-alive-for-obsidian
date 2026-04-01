@@ -6,6 +6,7 @@ set -euo pipefail
 
 HERMES_DIR="${HERMES_DIR:-$HOME/.hermes}"
 VAULT_PATH=""
+SKILL_CATEGORY="note-taking"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # --- Usage ---
@@ -13,19 +14,21 @@ usage() {
   echo "Usage: ./install.sh --vault /path/to/your/Obsidian\\ Vault"
   echo ""
   echo "Options:"
-  echo "  --vault PATH    Absolute path to your Obsidian vault (required)"
-  echo "  --hermes PATH   Hermes home directory (default: ~/.hermes)"
-  echo "  --help          Show this help"
+  echo "  --vault PATH       Absolute path to your Obsidian vault (required)"
+  echo "  --hermes PATH      Hermes home directory (default: ~/.hermes)"
+  echo "  --category NAME    Skill category directory (default: note-taking)"
+  echo "  --help             Show this help"
   exit 1
 }
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --vault)  VAULT_PATH="$2"; shift 2 ;;
-    --hermes) HERMES_DIR="$2"; shift 2 ;;
-    --help)   usage ;;
-    *)        echo "Unknown option: $1"; usage ;;
+    --vault)    VAULT_PATH="$2"; shift 2 ;;
+    --hermes)   HERMES_DIR="$2"; shift 2 ;;
+    --category) SKILL_CATEGORY="$2"; shift 2 ;;
+    --help)     usage ;;
+    *)          echo "Unknown option: $1"; usage ;;
   esac
 done
 
@@ -48,10 +51,13 @@ if [[ ! -d "$HERMES_DIR/cron" ]]; then
 fi
 
 # --- 1. Install the skill ---
-SKILL_DIR="$HERMES_DIR/skills/restart-safe-loop"
-mkdir -p "$SKILL_DIR"
+SKILL_DIR="$HERMES_DIR/skills/$SKILL_CATEGORY/restart-safe-loop-workflow"
+mkdir -p "$SKILL_DIR/references"
 cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
-echo "Installed skill to $SKILL_DIR/SKILL.md"
+if [[ -f "$SCRIPT_DIR/references/repo-layout.md" ]]; then
+  cp "$SCRIPT_DIR/references/repo-layout.md" "$SKILL_DIR/references/repo-layout.md"
+fi
+echo "Installed skill to $SKILL_DIR/"
 
 # --- 2. Set up Obsidian vault structure ---
 TASKS_DIR="$VAULT_PATH/Tasks/Session-Resume-Workflow"
@@ -69,6 +75,13 @@ if [[ ! -f "$TASKS_DIR/WORKFLOW-INDEX.md" ]]; then
   echo "Copied WORKFLOW-INDEX.md to $TASKS_DIR/"
 else
   echo "WORKFLOW-INDEX.md already exists, skipping."
+fi
+
+if [[ ! -f "$TASKS_DIR/LOOP-STATE.md" ]]; then
+  cp "$SCRIPT_DIR/templates/LOOP-STATE.md" "$TASKS_DIR/LOOP-STATE.md"
+  echo "Copied LOOP-STATE.md to $TASKS_DIR/"
+else
+  echo "LOOP-STATE.md already exists, skipping."
 fi
 
 # --- 3. Build and merge cron jobs ---
@@ -90,12 +103,15 @@ import json, sys, secrets, os
 
 jobs_file = sys.argv[1]
 now = sys.argv[2]
+
+SKILL_NAME = "restart-safe-loop-workflow"
+
 prompts = {
-    "workflow-watchdog":    {"prompt": sys.argv[3], "minutes": 15},
-    "workflow-replayer":    {"prompt": sys.argv[4], "minutes": 30},
-    "workflow-escalator":   {"prompt": sys.argv[5], "minutes": 60},
-    "workflow-validator":   {"prompt": sys.argv[6], "minutes": 60},
-    "workflow-smoke-test":  {"prompt": sys.argv[7], "minutes": 360},
+    "restart-safe-loop-watchdog":  {"prompt": sys.argv[3], "minutes": 15},
+    "restart-safe-loop-replayer":  {"prompt": sys.argv[4], "minutes": 30},
+    "restart-safe-loop-escalator": {"prompt": sys.argv[5], "minutes": 60},
+    "workflow-validator":          {"prompt": sys.argv[6], "minutes": 60},
+    "workflow-smoke-test":         {"prompt": sys.argv[7], "minutes": 360},
 }
 
 # Load existing jobs
@@ -117,8 +133,8 @@ for name, info in prompts.items():
         "id": secrets.token_hex(6),
         "name": name,
         "prompt": info["prompt"],
-        "skills": [],
-        "skill": None,
+        "skills": [SKILL_NAME],
+        "skill": SKILL_NAME,
         "model": None,
         "provider": None,
         "base_url": None,
@@ -155,9 +171,11 @@ PYEOF
 
 echo ""
 echo "Done. Installed:"
-echo "  - Skill:     $SKILL_DIR/SKILL.md"
-echo "  - Template:  $TASKS_DIR/TEMPLATE.md"
-echo "  - Index:     $TASKS_DIR/WORKFLOW-INDEX.md"
-echo "  - Cron jobs: $JOBS_FILE"
+echo "  - Skill:      $SKILL_DIR/"
+echo "  - Template:   $TASKS_DIR/TEMPLATE.md"
+echo "  - Index:      $TASKS_DIR/WORKFLOW-INDEX.md"
+echo "  - Loop state: $TASKS_DIR/LOOP-STATE.md"
+echo "  - Cron jobs:  $JOBS_FILE"
 echo ""
-echo "Verify by asking Hermes: \"Run the workflow smoke test now.\""
+echo "To arm the loop, tell Hermes: /loop-start"
+echo "To verify, ask Hermes: \"Run the workflow smoke test now.\""
