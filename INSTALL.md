@@ -50,17 +50,14 @@ If you prefer not to use the script:
 4. Replace `VAULT_PATH` in each file under `prompts/` with your actual vault path.
 5. Create the 5 cron jobs manually (see table above for names and schedules). Use the content of each prompt file as the job's prompt text. Set the `skill` field to `restart-safe-loop-workflow`.
 
-## Arm the loop
+## Loop controls
 
-After installing, tell Hermes:
+The loop installs in a disarmed state. Hermes provides native commands to control it:
 
-> /loop-start
+- **`/loop-start`** — sets LOOP-STATE.md to `armed`. The watchdog, replayer, and escalator begin monitoring. The validator and smoke test always run regardless of loop state.
+- **`/loop-stop`** — sets LOOP-STATE.md to `disarmed`. The watchdog, replayer, and escalator skip their runs with a one-line no-op message.
 
-This sets `LOOP-STATE.md` to `armed` and the monitoring jobs begin running.
-
-To pause the loop:
-
-> /loop-stop
+These are built into Hermes and work from any channel (Telegram, CLI, etc.).
 
 ## Verify
 

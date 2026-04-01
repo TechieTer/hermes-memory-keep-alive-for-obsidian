@@ -6,6 +6,13 @@ Before using this prompt, replace `VAULT_PATH` below with the absolute path to y
 
 - Task folders: `VAULT_PATH/Tasks/`
 - Workflow index: `VAULT_PATH/Tasks/Session-Resume-Workflow/WORKFLOW-INDEX.md`
+- Loop state: `VAULT_PATH/Tasks/Session-Resume-Workflow/LOOP-STATE.md`
+
+## Loop gate
+
+Before doing anything, read LOOP-STATE.md. If `state: disarmed`, stop immediately and return: `escalator: loop disarmed, skipping.`
+
+Only proceed if `state: armed`.
 
 ## Rules
 

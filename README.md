@@ -33,12 +33,11 @@ cd hermes-restart-safe-loop-workflow
 ./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
 
-That's it. The script:
-- Installs the skill to `~/.hermes/skills/note-taking/restart-safe-loop-workflow/`
-- Sets up your vault with the template, workflow index, and loop state marker
-- Adds all 5 cron jobs to Hermes with the correct skill binding
+That's it. The script installs the skill, sets up your vault, and adds all 5 cron jobs to Hermes.
 
-Then tell Hermes `/loop-start` to arm it.
+The loop starts disarmed. Use the native Hermes commands to control it:
+- **`/loop-start`** — arms the loop and begins monitoring
+- **`/loop-stop`** — disarms the loop and pauses monitoring
 
 See [INSTALL.md](INSTALL.md) for manual install, options, and uninstall.
 

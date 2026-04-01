@@ -11,7 +11,7 @@ Before using this prompt, replace `VAULT_PATH` below with the absolute path to y
 
 Run these checks in order:
 
-1. **Core notes exist**: `Session-Resume-Workflow/` contains RESUME.md, CHECKLIST.md, DOCS.md, TEMPLATE.md, and WORKFLOW-INDEX.md.
+1. **Core notes exist**: `Session-Resume-Workflow/` contains RESUME.md, CHECKLIST.md, DOCS.md, TEMPLATE.md, WORKFLOW-INDEX.md, and LOOP-STATE.md.
 2. **Template is valid**: TEMPLATE.md defines the RESUME.md, CHECKLIST.md, and DOCS.md sections.
 3. **Workflow index is current**: WORKFLOW-INDEX.md was updated within the last 24 hours and lists at least one active task.
 4. **Scheduled jobs are running**: The following Hermes cron jobs exist and are enabled:
@@ -20,7 +20,8 @@ Run these checks in order:
    - `restart-safe-loop-escalator`
    - `workflow-validator`
    - `workflow-smoke-test`
-5. **At least one active task has a heartbeat and a next action** in its RESUME.md.
+5. **Loop state is valid**: LOOP-STATE.md contains `state: armed` or `state: disarmed`. Report which.
+6. **At least one active task has a heartbeat and a next action** in its RESUME.md.
 
 ## Output
 
