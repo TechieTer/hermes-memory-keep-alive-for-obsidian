@@ -1,4 +1,13 @@
-# Obsidian / Hermes generated cruft
+# OS
 .DS_Store
+
+# Editors
 *.swp
 *.tmp
+*~
+
+# Obsidian workspace
+.obsidian/
+
+# Node (safety catch)
+node_modules/

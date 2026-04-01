@@ -1,26 +1,62 @@
 # Task Note Template
 
+Use this template to create the three core notes for a new task folder. Copy each section into its own file.
+
+---
+
 ## RESUME.md
-- Task name
-- Current status
-- Last heartbeat
-- Next action
-- Key files
-- Restart note
+
+```markdown
+# <Task Name> Resume
+
+Last heartbeat: <YYYY-MM-DD HH:MM TZ>
+Task: <one-line description of the task>
+Current status: <active | stalled | complete>
+Next action: <one concrete next step>
+Key files:
+- Tasks/<task-name>/RESUME.md
+- Tasks/<task-name>/CHECKLIST.md
+- Tasks/<task-name>/DOCS.md
+
+Restart note: <what a fresh session needs to know to pick this up>
+```
 
 ## CHECKLIST.md
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Verification
+
+```markdown
+# <Task Name> Checklist
+
+- [ ] Step 1: <describe the step>
+- [ ] Step 2: <describe the step>
+- [ ] Verification: confirm the work is correct
+```
 
 ## DOCS.md
-- Goal
-- Important decisions
-- Files that matter
-- Gotchas and failure modes
-- Notes for the next session
+
+```markdown
+# <Task Name> Docs
+
+## Goal
+<what this task is trying to achieve>
+
+## Important decisions
+<key choices made and why>
+
+## Files that matter
+<paths to the important files>
+
+## Gotchas and failure modes
+<things that can go wrong>
+
+## Notes for the next session
+<anything a fresh session should know>
+```
+
+---
 
 ## Rules
-- Keep it short.
-- Add a heartbeat to active tasks.
-- Never leave a folder with only one of the three core notes.
+
+- Keep notes short and scannable.
+- Always update `Last heartbeat` when touching an active task.
+- Never leave a folder with only one or two of the three core notes. If one exists, all three must exist.
+- The validator will auto-create missing notes from this template.

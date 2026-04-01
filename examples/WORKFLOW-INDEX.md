@@ -1,13 +1,17 @@
 # Workflow Index
 
+Last updated: YYYY-MM-DD HH:MM TZ
+
 ## Active tasks
+
 - Example Task
-  - last touched: 2026-04-01
+  - last touched: YYYY-MM-DD HH:MM TZ
   - status: active
   - next action: do one small mechanical step
 
-## Completed hardening
-- Restart-Safe Loop Workflow
-  - completed: 2026-04-01
+## Completed
+
+- Setup
+  - completed: YYYY-MM-DD
   - status: complete
   - next action: keep the validator and smoke test running

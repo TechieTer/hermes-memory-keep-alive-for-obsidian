@@ -1,80 +1,69 @@
 ---
-name: restart-safe-loop-workflow
+name: restart-safe-loop
 description: |
-  Package and maintain a restart-safe Hermes loop workflow for Obsidian-backed task recovery.
-  Use when you want a reusable, GitHub-ready workflow that keeps durable task state in notes,
-  detects stalls, rehydrates work in fresh context, and hardens the loop with validator and smoke-test layers.
+  A restart-safe recovery loop for Obsidian-backed Hermes tasks.
+  Keeps durable task state in RESUME / CHECKLIST / DOCS notes,
+  detects stalls with a watchdog, advances work with a replayer,
+  escalates repeated failures, and validates note integrity automatically.
 metadata:
-  author: carrie
+  author: terry
   version: "0.1.0"
+  hermes:
+    tags: [workflow, recovery, obsidian, restart-safe, task-management]
+    related_skills: []
 ---
 
 # Restart-Safe Loop Workflow
 
-Use this skill when packaging a Hermes loop system for reuse, sharing, or GitHub publication.
+Use this skill when you need a durable, restart-proof task loop backed by Obsidian notes.
 
-## What it packages
+## What it does
 
-- Obsidian task folders with RESUME.md, CHECKLIST.md, DOCS.md
-- a canonical TEMPLATE.md for auto-backfill
-- a WORKFLOW-INDEX.md for quick scanning
-- a watchdog / replayer / escalator chain
-- validator and smoke-test layers
-- crisp daily summary and handoff prompts
+Keeps the state of long-running tasks in files instead of chat, then wraps them with automated recovery layers.
+
+Every task lives in its own folder under your Obsidian vault's `Tasks/` directory with three core notes:
+- **RESUME.md** - status, heartbeat, next action, key files, restart note
+- **CHECKLIST.md** - step-by-step progress with verification
+- **DOCS.md** - goal, decisions, gotchas, notes for the next session
+
+A **WORKFLOW-INDEX.md** provides the single source of truth for scanning all active and completed tasks.
+
+## Recovery layers
+
+The loop uses five automated layers, each running as a Hermes cron job:
+
+1. **Watchdog** (every 15m) - detects stalled tasks and promise-without-progress patterns. Writes a WATCHDOG.md recovery note with the blocker, a why-stalled tag, and the next action.
+2. **Replayer** (every 30m) - takes exactly one concrete step on a stalled task using fresh context. If the step is ambiguous, updates the notes and stops.
+3. **Escalator** (every 60m) - handles repeated stalls by forcing a fresh-session handoff with the strongest next action.
+4. **Validator** (every 60m) - inspects task folders for missing notes, backfills from the canonical template, refreshes the workflow index.
+5. **Smoke test** (every 360m) - verifies the workflow itself is healthy: core notes exist, template exists, jobs are enabled, at least one task has a heartbeat.
 
 ## When to use
 
-Use this skill when you want to:
-- turn a working restart-safe workflow into a reusable package
-- publish a Hermes-ready loop to GitHub
-- create a showcase-friendly repo for Discord or community sharing
-- standardize the loop so other users can copy it cleanly
+- Any long-running task that could stall silently after a restart or context loss
+- Multi-step work where state needs to survive across sessions
+- When you want automated detection and recovery of stuck tasks
 
-## Packaging steps
+## File layout
 
-1. Collect the stable workflow notes.
-2. Write a short README explaining what the loop does and who it helps.
-3. Include the canonical templates and example folder structure.
-4. Include the validator, smoke-test, and stall-recovery prompts.
-5. Keep the docs short, practical, and copyable.
-6. Make the repo easy to scan in under a minute.
+```
+<vault>/Tasks/
+  Session-Resume-Workflow/
+    TEMPLATE.md          # canonical template for new task folders
+    WORKFLOW-INDEX.md    # quick-scan index of all tasks
+  <task-name>/
+    RESUME.md
+    CHECKLIST.md
+    DOCS.md
+    WATCHDOG.md          # created by watchdog when stall detected
+```
 
-## Recommended repo layout
+## Rules
 
-- README.md
-- SKILL.md
-- examples/
-- templates/
-- prompts/
-- references/
-
-## Recommended content
-
-README.md should explain:
-- the problem it solves
-- the core loop
-- the fail-safe layers
-- how to install or copy it
-- a tiny quick-start example
-
-## Sharing guidance
-
-Keep the public package:
-- concise
-- friendly
-- easy to fork
-- explicit about the Obsidian dependency
-- clear that it is designed for restart resilience
-
-## Install messaging to include
-
-Be honest that there is no npm/Homebrew one-line installer yet.
-Tell users to create two jobs:
-- workflow-validator
-- workflow-smoke-test
-
-Mention the suggested schedules and that they should use the prompts from `prompts/`.
-
-## Quality bar
-
-A good package should let another Hermes user understand the workflow and copy it without a long back-and-forth.
+- Every active task folder must have RESUME.md, CHECKLIST.md, and DOCS.md.
+- RESUME.md must have a `Last heartbeat` and a `Next action`.
+- A heartbeat older than 24 hours or a missing next action means the task is stale.
+- The validator auto-creates missing notes from the canonical template.
+- The watchdog writes WATCHDOG.md only when it can prove a stall. It does not manufacture problems.
+- The replayer takes only one mechanical step per pass. No speculative fixes.
+- The escalator acts only after repeated stalls or failed replayer passes.

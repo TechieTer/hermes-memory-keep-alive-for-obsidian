@@ -1,57 +1,70 @@
 # Hermes Restart-Safe Loop Workflow
 
-A file-first Hermes recovery loop for Obsidian-backed task state.
-
-It keeps durable work in notes, then wraps it with recovery, validation, and restart-safe handoffs.
-
-## What it does
-
-It keeps the durable state of a long task in files instead of chat, then adds a recovery loop around it.
-
-It combines:
-- Obsidian RESUME / CHECKLIST / DOCS notes
-- a canonical TEMPLATE for backfills
-- a workflow index for quick scanning
-- a watchdog that detects stalls
-- a replayer that advances one step in fresh context
-- an escalator for repeated promise-without-progress
-- validator and smoke-test layers
-- crisp daily summary and handoff prompts
-
-## Who it is for
-
-Useful for anyone running Hermes or a similar agent setup who wants durable, restart-proof task state.
-
-## Install
-
-What you need before you start:
-- Hermes installed and working
-- an Obsidian vault path you want to use
-- a place to store the workflow files
-
-There is no npm, Homebrew, or one-line CLI installer for this package yet.
-Install it manually by copying the files into your Hermes setup.
-
-1. Copy `SKILL.md` into your Hermes skills directory.
-2. Copy `templates/` and `prompts/` into your workflow repo or Obsidian-backed setup.
-3. Copy `examples/WORKFLOW-INDEX.md` if you want a starter index.
-4. Create and enable the `workflow-validator` job and the `workflow-smoke-test` job.
-5. Point the workflow at an Obsidian vault.
-
-See INSTALL.md for the full step-by-step and job setup instructions.
-
-## Quick start
-
-1. Copy the skill into your Hermes skills directory.
-2. Copy the templates and example workflow notes.
-3. Enable the validator and smoke-test jobs.
-4. Use the Obsidian task folder as the source of truth.
+A file-first Hermes recovery loop for Obsidian-backed task state. It keeps durable work in notes, then wraps it with automated recovery, validation, and restart-safe handoffs.
 
 ## Why it exists
 
-Because long tasks fail quietly when the only state is in chat.
-This loop makes the state live in files, not vibes.
+Long tasks fail quietly when the only state is in chat. This loop makes the state live in files, not vibes.
 
-## Showcase blurb
+## What it does
 
-A file-first Hermes loop for Obsidian-backed task recovery: watchdog, replayer, escalator, validator, and smoke-test layers that keep work moving after stalls or context loss.
+Every task gets its own folder with three core notes:
+- **RESUME.md** - status, heartbeat, next action, restart note
+- **CHECKLIST.md** - step-by-step progress
+- **DOCS.md** - goal, decisions, gotchas
+
+Five automated layers keep things moving:
+
+| Layer | Schedule | Purpose |
+|-------|----------|---------|
+| Watchdog | 15m | Detects stalls and writes recovery notes |
+| Replayer | 30m | Takes one concrete step on a stalled task |
+| Escalator | 60m | Forces fresh-session handoff on repeated stalls |
+| Validator | 60m | Repairs missing notes, refreshes the workflow index |
+| Smoke test | 360m | Verifies the workflow itself is still healthy |
+
+## Quick start
+
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/hermes-restart-safe-loop-workflow.git
+cd hermes-restart-safe-loop-workflow
+
+# Copy the skill into Hermes
+cp SKILL.md ~/.hermes/skills/restart-safe-loop/SKILL.md
+
+# Set up your Obsidian vault
+VAULT="$HOME/Documents/Obsidian Vault"  # <-- your vault path
+mkdir -p "$VAULT/Tasks/Session-Resume-Workflow"
+cp templates/TEMPLATE.md "$VAULT/Tasks/Session-Resume-Workflow/TEMPLATE.md"
+cp examples/WORKFLOW-INDEX.md "$VAULT/Tasks/Session-Resume-Workflow/WORKFLOW-INDEX.md"
+
+# Replace VAULT_PATH in each prompt with your actual vault path
+# Then create the 5 Hermes cron jobs (see INSTALL.md for details)
+```
+
+See [INSTALL.md](INSTALL.md) for the full step-by-step including all five cron jobs.
+
+## Repo layout
+
+```
+SKILL.md              # Hermes skill definition
+prompts/
+  watchdog-prompt.md  # Stall detection
+  replayer-prompt.md  # One-step recovery
+  escalator-prompt.md # Repeated-stall handoff
+  validator-prompt.md # Note integrity and index refresh
+  smoke-test-prompt.md # Workflow health check
+templates/
+  TEMPLATE.md         # Canonical task folder template
+examples/
+  WORKFLOW-INDEX.md   # Starter workflow index
+```
+
+## Who it is for
+
+Anyone running Hermes (or a similar agent loop) who wants durable, restart-proof task state backed by Obsidian notes.
+
+## License
+
+MIT
