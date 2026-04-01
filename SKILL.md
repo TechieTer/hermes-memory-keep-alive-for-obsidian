@@ -20,8 +20,10 @@ That workflow is for task memory and restart-friendly notes.
 This loop is for live control: arm it, disarm it, and let Hermes keep
 watch over a running project with watchdog, replayer, and escalator layers.
 
-If you also use the `obsidian-task-resume-workflow` skill, the loop works
-alongside it — but it does not require it. This skill stands on its own.
+This skill is fully self-contained. If no task notes exist when the loop
+is armed, the watchdog automatically creates them by looking at what the
+agent is currently working on. If you also use `obsidian-task-resume-workflow`,
+the loop works alongside it — but it does not require it.
 
 ## Loop controls
 
@@ -44,7 +46,13 @@ When armed, three automated layers monitor your agent's work:
 | Replayer | `restart-safe-loop-replayer` | 30m | Takes one concrete step on a stalled task |
 | Escalator | `restart-safe-loop-escalator` | 60m | Forces a fresh-session handoff on repeated stalls |
 
-The watchdog writes a WATCHDOG.md when it detects a stall. The replayer picks it up and advances one step. If the same stall keeps repeating, the escalator forces a clean restart.
+If the agent has no task notes yet, the watchdog bootstraps them automatically —
+it looks at what the agent is working on and creates a RESUME.md, CHECKLIST.md,
+and DOCS.md so the loop has something to monitor.
+
+Once task notes exist, the watchdog writes a WATCHDOG.md when it detects a stall.
+The replayer picks it up and advances one step. If the same stall keeps repeating,
+the escalator forces a clean restart.
 
 When disarmed, all three jobs skip immediately with a one-line no-op.
 

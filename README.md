@@ -23,11 +23,11 @@ When the loop is armed, three automated layers monitor your agent's work:
 
 When you `/loop-stop`, all three jobs immediately stop running. No wasted tokens.
 
-## What this is not
+## Fully self-contained
 
-This is not the Obsidian RESUME / CHECKLIST / DOCS task-resume workflow. That workflow is for task memory and restart-friendly notes — it's a separate skill (`obsidian-task-resume-workflow`).
+You don't need any other skills installed. If the agent has no task notes when the loop is armed, the watchdog automatically creates them — it looks at what the agent is working on and bootstraps a RESUME.md, CHECKLIST.md, and DOCS.md so the loop has something to monitor.
 
-This loop is for **live control**: arm it, disarm it, and let Hermes keep watch over a running task. It works alongside the task-resume workflow if you have it, but it doesn't require it. This skill stands on its own.
+This is not the Obsidian task-resume workflow (that's a separate skill for task memory). This loop is for **live control**: arm it, disarm it, and let Hermes keep watch over a running task. It works alongside other skills if you have them, but it doesn't require them.
 
 ## Install
 
@@ -44,7 +44,7 @@ See [INSTALL.md](INSTALL.md) for manual install, options, and uninstall.
 ## Usage
 
 1. **`/loop-start`** — arm the loop
-2. **Give your agent a task**
+2. **Give your agent a task** — the watchdog auto-creates task notes if needed
 3. **Walk away** — the loop keeps the task alive through stalls and restarts
 4. **`/loop-stop`** when done — stops burning tokens
 
