@@ -7,7 +7,7 @@ description: |
   work moving — then disarm when done so you're not burning tokens.
 metadata:
   author: terry
-  version: "1.0.0"
+  version: "1.1.0"
   hermes:
     tags: [workflow, memory, recovery, restart-safe, obsidian, loop, keep-alive]
     related_skills: []
@@ -117,6 +117,12 @@ These run always, regardless of loop state:
 - All 5 scheduled jobs exist and are enabled
 - At least one active task has a heartbeat and next action
 - Loop state is valid (armed or disarmed)
+- Hermes memory provider is healthy (runs `hermes memory status`, Hermes 0.7.0+)
+
+### Validator checks:
+- Repairs missing RESUME.md, CHECKLIST.md, DOCS.md from canonical template
+- Refreshes WORKFLOW-INDEX.md with current task state
+- Checks Hermes built-in MEMORY.md character count against the 2,200-char limit — warns at 80% capacity (Hermes 0.7.0+)
 
 ## File layout
 

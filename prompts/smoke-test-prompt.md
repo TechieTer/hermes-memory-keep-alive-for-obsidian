@@ -22,9 +22,13 @@ Run these checks in order:
    - `memory-validator`
    - `memory-smoke-test`
 6. **At least one active task has a heartbeat and a next action** in its RESUME.md.
+7. **Hermes memory provider is healthy** (added for Hermes 0.7.0+): Run `hermes memory status` in the shell.
+   - If the command succeeds, report the active provider name (e.g. `built-in`, `mem0`, `honcho`).
+   - If the command fails or returns an error, flag it as a failure with the message returned.
+   - If Hermes is not installed or the command is unavailable, skip this check and note it as skipped.
 
 ## Output
 
-If everything passes, return a single line: `smoke-test: pass (loop: <armed|disarmed>)`
+If everything passes, return a single line: `smoke-test: pass (loop: <armed|disarmed>, memory: <provider-name>)`
 
 If anything fails, list each failure with a short description and a suggested fix. Keep it under 10 lines.
