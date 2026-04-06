@@ -11,6 +11,8 @@ Automatic task memory and a keep-alive loop for Hermes agents.
 /loop-stop    ← disarm when done
 ```
 
+> **Hermes 0.7.0+** — v1.1.0 adds compatibility with the new pluggable memory provider system. The smoke test now checks `hermes memory status` and the validator monitors your built-in `MEMORY.md` file for capacity warnings. See [changelog](#changelog) below.
+
 ## The problem
 
 1. Agent tasks lose state when sessions end or context compacts. You restart and everything is gone.
@@ -25,7 +27,7 @@ Every time your agent gets a task, it creates a folder in your Obsidian vault wi
 - **CHECKLIST.md** — step-by-step progress
 - **DOCS.md** — decisions, gotchas, notes for the next session
 
-A **validator** runs every 60m to repair missing notes and keep a workflow index current. A **smoke test** runs every 360m to make sure the system itself is healthy.
+A **validator** runs every 60m to repair missing notes, keep a workflow index current, and check Hermes built-in memory capacity. A **smoke test** runs every 360m to make sure the system itself is healthy, including verifying your Hermes memory provider.
 
 ### Keep-alive loop (arm when needed)
 
@@ -42,7 +44,7 @@ When you `/loop-stop`, the monitoring jobs immediately stop. The task memory kee
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/hermes-memory-keep-alive-for-obsidian.git
+git clone https://github.com/TechieTer/hermes-memory-keep-alive-for-obsidian.git
 cd hermes-memory-keep-alive-for-obsidian
 ./install.sh --vault "$HOME/Documents/Obsidian Vault"
 ```
@@ -72,8 +74,8 @@ prompts/
   watchdog-prompt.md      # Stall detection (keep-alive)
   replayer-prompt.md      # One-step recovery (keep-alive)
   escalator-prompt.md     # Repeated-stall handoff (keep-alive)
-  validator-prompt.md     # Note integrity (memory)
-  smoke-test-prompt.md    # System health check (memory)
+  validator-prompt.md     # Note integrity + Hermes memory capacity check
+  smoke-test-prompt.md    # System health + Hermes memory provider check
 templates/
   TEMPLATE.md             # Canonical task note template
   LOOP-STATE.md           # Armed/disarmed state marker
@@ -86,6 +88,18 @@ references/
 ## Who it is for
 
 Anyone running Hermes who wants their agent to remember what it's working on and finish long tasks without babysitting.
+
+## Changelog
+
+### v1.1.0 — Hermes 0.7.0 compatibility
+- **Smoke test**: added check for `hermes memory status` — verifies the active memory provider (built-in, Honcho, Mem0, etc.) is healthy and reports provider name in pass output
+- **Validator**: added Hermes built-in `MEMORY.md` capacity check — warns in WORKFLOW-INDEX.md when usage exceeds 80% of the 2,200-char limit, prompting you to ask Hermes to consolidate
+- Graceful fallback on both checks if Hermes is not installed
+
+### v1.0.0 — Initial release
+- Task memory with RESUME/CHECKLIST/DOCS notes in Obsidian
+- Keep-alive loop with watchdog, replayer, and escalator layers
+- Validator and smoke test integrity checks
 
 ## License
 
